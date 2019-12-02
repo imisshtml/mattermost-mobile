@@ -13,6 +13,8 @@ import RNFetchBlob from 'rn-fetch-blob';
 import DeviceInfo from 'react-native-device-info';
 import AndroidOpenSettings from 'react-native-android-open-settings';
 
+import CameraRoll from '@react-native-community/cameraroll';
+
 import Icon from 'react-native-vector-icons/Ionicons';
 import DocumentPicker from 'react-native-document-picker';
 import ImagePicker from 'react-native-image-picker';
@@ -181,7 +183,7 @@ export default class AttachmentButton extends PureComponent {
                 if (response.error || response.didCancel) {
                     return;
                 }
-
+                
                 this.uploadFiles([response]);
             });
         }
@@ -375,7 +377,7 @@ export default class AttachmentButton extends PureComponent {
     uploadFiles = async (files) => {
         const file = files[0];
         if (!file.fileSize | !file.fileName) {
-            const path = (file.path || file.uri).replace('file://', '');
+            const path = (file.path || file.uri || file.filepath).replace('file://', '');
             const fileInfo = await RNFetchBlob.fs.stat(path);
             file.fileSize = fileInfo.size;
             file.fileName = fileInfo.filename;
@@ -393,6 +395,15 @@ export default class AttachmentButton extends PureComponent {
         } else {
             this.props.uploadFiles(files);
         }
+    };
+
+    attachPhotoFromCameraRollScroller = (src) => {
+        CameraRoll.getSelectedPhoto(`${src.image.uri}`)
+            .then(r => {
+                this.uploadFiles([r.node.image]);
+            })
+            .catch((err) => {
+            });
     };
 
     showFileAttachmentOptions = () => {
@@ -415,6 +426,17 @@ export default class AttachmentButton extends PureComponent {
 
         this.props.blurTextBox();
         const items = [];
+
+        if (canTakePhoto && canBrowsePhotoLibrary) {
+            items.push({
+                action: this.attachPhotoFromCameraRollScroller,
+                text: {
+                    id: 'Camera Roll Scroller',
+                    defaultMessage: 'Camera Roll Scroller',
+                },
+                icon: null,
+            });
+        }
 
         if (canTakePhoto) {
             items.push({

@@ -15,7 +15,6 @@ export function initUploadFiles(files, rootId) {
         files.forEach((file) => {
             const fileData = buildFileUploadData(file);
             const clientId = generateId();
-
             clientIds.push({
                 clientId,
                 localPath: fileData.uri,

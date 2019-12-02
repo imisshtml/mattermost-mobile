@@ -10,6 +10,7 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
+import CameraRoll from '@react-native-community/cameraroll';
 
 import EventEmitter from 'mattermost-redux/utils/event_emitter';
 
@@ -44,6 +45,7 @@ export default class OptionsModal extends PureComponent {
 
         this.state = {
             top: new Animated.Value(props.deviceHeight),
+            cameraroll: [],
         };
     }
 
@@ -63,6 +65,14 @@ export default class OptionsModal extends PureComponent {
         this.props.onCancelPress();
         this.close();
     };
+
+    loadCameraRoll = () => {
+        CameraRoll.getPhotos({
+          first: 30,
+          assetType: 'All'
+        })
+        .then(c => this.setState({ cameraroll: c.edges }))
+    }
 
     close = () => {
         Animated.timing(this.state.top, {
@@ -98,6 +108,8 @@ export default class OptionsModal extends PureComponent {
                             onItemPress={this.onItemPress}
                             title={title}
                             isLandscape={isLandscape}
+                            loadCameraRoll={this.loadCameraRoll}
+                            cameraRoll={this.state.cameraroll}
                         />
                     </AnimatedView>
                 </View>

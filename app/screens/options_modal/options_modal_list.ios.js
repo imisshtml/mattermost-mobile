@@ -8,6 +8,8 @@ import {
     Text,
     TouchableOpacity,
     View,
+    FlatList,
+    Image,
 } from 'react-native';
 import IconFont from 'react-native-vector-icons/FontAwesome';
 import {paddingHorizontal as padding} from 'app/components/safe_area_view/iphone_x_spacing';
@@ -37,6 +39,9 @@ export default class OptionsModalList extends PureComponent {
     });
 
     handleItemPress = preventDoubleTap((action) => {
+        if (!action) {
+            return null;
+        }
         this.props.onItemPress();
         setTimeout(() => {
             if (typeof action === 'function') {
@@ -44,6 +49,56 @@ export default class OptionsModalList extends PureComponent {
             }
         }, 100);
     });
+
+    handleCameraRollPress = preventDoubleTap((action, node) => {
+        if (!action) {
+            return null;
+        }
+        this.props.onItemPress();
+        setTimeout(() => {
+            if (typeof action === 'function') {
+                action(node);
+            }
+        }, 100);
+    });
+
+    keyExtractor = (item) => item.node.image.uri;
+
+    renderCameraRollPhoto = (item, action) => {
+        return (
+            <View style={{padding: 5}} onStartShouldSetResponder={() => true} key={item.node.image.uri}>
+                <TouchableOpacity
+                    onPress={() => this.handleCameraRollPress(action, item.node)}
+                >
+                <Image 
+                    source={{uri: item.node.image.uri}}
+                    style={{
+                        width: 75,
+                        height: 75,
+                        borderRadius: 10,
+                    }}
+                />
+                </TouchableOpacity>
+            </View>
+        );
+    };
+
+    renderCameraRollScroller = (index, action) => {
+        const {loadCameraRoll, cameraRoll} = this.props;
+
+        loadCameraRoll();
+
+        return (
+            <View key={index}>
+                <FlatList
+                    horizontal
+                    data={cameraRoll}
+                    renderItem={({ item }) => this.renderCameraRollPhoto(item, action)}
+                    keyExtractor={this.keyExtractor}
+                />
+            </View>
+        );
+    };
 
     renderOptions = () => {
         const {items} = this.props;
@@ -53,6 +108,10 @@ export default class OptionsModalList extends PureComponent {
             let optionIconStyle = style.optionIcon;
             if (typeof item.iconStyle !== 'undefined') {
                 optionIconStyle = item.iconStyle;
+            }
+
+            if(item.text.id === 'Camera Roll Scroller') {
+                return this.renderCameraRollScroller(index, item.action);
             }
 
             if (item.text.hasOwnProperty('id')) {
